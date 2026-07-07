@@ -81,6 +81,19 @@ jobs:
           EOF
           git config user.name "design-system-bot"
           git config user.email "bot@tera.or.id"
+          git diff --quiet src/index.css && echo "NO_CHANGE=true" >> $GITHUB_ENV || echo "NO_CHANGE=false" >> $GITHUB_ENV
+
+      - name: Validate build before pushing (foundation)
+        if: env.NO_CHANGE == 'false'
+        run: |
+          cd /tmp/foundation
+          npm install
+          npm run build
+
+      - name: Commit and push (foundation)
+        if: env.NO_CHANGE == 'false'
+        run: |
+          cd /tmp/foundation
           git add src/index.css
-          git diff --cached --quiet || git commit -m "chore: sync design tokens from design-system repo"
+          git commit -m "chore: sync design tokens from design-system repo"
           git push
