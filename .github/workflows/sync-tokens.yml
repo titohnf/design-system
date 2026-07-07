@@ -44,6 +44,22 @@ jobs:
           git diff --cached --quiet || git commit -m "chore: sync design tokens from design-system repo"
           git push
 
+      - name: Extract primary-only subset for foundation
+        run: |
+          grep -E '^\s*--primary:|^\s*--primary-dark:|^\s*--primary-foreground:' tokens.css > /tmp/primary-lines.txt
+          python3 -c "
+          lines = open('/tmp/primary-lines.txt').read().strip().split('\n')
+          out = ['/* DESIGN-TOKENS-START */']
+          for l in lines:
+              k, v = l.strip().split(':', 1)
+              k = k.replace('--', '--color-')
+              out.append(f'{k}:{v}')
+          out.append('/* DESIGN-TOKENS-END */')
+          open('/tmp/foundation-block.txt', 'w').write('\n'.join(out))
+          "
+          echo "Isi blok khusus foundation:"
+          cat /tmp/foundation-block.txt
+
       - name: Sync to foundation
         run: |
           git clone https://x-access-token:${{ secrets.SYNC_TOKEN }}@github.com/titohnf/foundation.git /tmp/foundation
@@ -52,7 +68,7 @@ jobs:
           import re
           with open('src/index.css', 'r') as f:
               content = f.read()
-          with open('/tmp/token-block.txt', 'r') as f:
+          with open('/tmp/foundation-block.txt', 'r') as f:
               block = f.read().strip()
           new_content = re.sub(
               r'/\* DESIGN-TOKENS-START \*/.*?/\* DESIGN-TOKENS-END \*/',
