@@ -1,0 +1,70 @@
+name: Sync Design Tokens
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tokens.css'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout design-system
+        uses: actions/checkout@v4
+
+      - name: Extract token block
+        run: |
+          awk '/\/\* DESIGN-TOKENS-START \*\//,/\/\* DESIGN-TOKENS-END \*\//' tokens.css > /tmp/token-block.txt
+          echo "Isi blok yang akan disebar:"
+          cat /tmp/token-block.txt
+
+      - name: Sync to komunitastera
+        run: |
+          git clone https://x-access-token:${{ secrets.SYNC_TOKEN }}@github.com/titohnf/komunitastera.git /tmp/komunitastera
+          cd /tmp/komunitastera
+          python3 - <<'EOF'
+          import re
+          with open('app/globals.css', 'r') as f:
+              content = f.read()
+          with open('/tmp/token-block.txt', 'r') as f:
+              block = f.read().strip()
+          new_content = re.sub(
+              r'/\* DESIGN-TOKENS-START \*/.*?/\* DESIGN-TOKENS-END \*/',
+              block,
+              content,
+              flags=re.DOTALL
+          )
+          with open('app/globals.css', 'w') as f:
+              f.write(new_content)
+          EOF
+          git config user.name "design-system-bot"
+          git config user.email "bot@tera.or.id"
+          git add app/globals.css
+          git diff --cached --quiet || git commit -m "chore: sync design tokens from design-system repo"
+          git push
+
+      - name: Sync to foundation
+        run: |
+          git clone https://x-access-token:${{ secrets.SYNC_TOKEN }}@github.com/titohnf/foundation.git /tmp/foundation
+          cd /tmp/foundation
+          python3 - <<'EOF'
+          import re
+          with open('src/index.css', 'r') as f:
+              content = f.read()
+          with open('/tmp/token-block.txt', 'r') as f:
+              block = f.read().strip()
+          new_content = re.sub(
+              r'/\* DESIGN-TOKENS-START \*/.*?/\* DESIGN-TOKENS-END \*/',
+              block,
+              content,
+              flags=re.DOTALL
+          )
+          with open('src/index.css', 'w') as f:
+              f.write(new_content)
+          EOF
+          git config user.name "design-system-bot"
+          git config user.email "bot@tera.or.id"
+          git add src/index.css
+          git diff --cached --quiet || git commit -m "chore: sync design tokens from design-system repo"
+          git push
