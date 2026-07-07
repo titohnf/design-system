@@ -41,11 +41,21 @@ class TeraHeader extends HTMLElement {
 
     const currentPath = window.location.pathname;
 
+    const normalizePath = (p) => {
+      if (!p) return '/';
+      p = p.replace(/\/index\.html$/, '/');
+      if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+      return p === '' ? '/' : p;
+    };
+    const currentNorm = normalizePath(currentPath);
+
     const shadow = this.attachShadow({ mode: 'open' });
 
     const navHtml = navItems.map(item => {
-      const isActive = item.href === currentPath ||
-        (item.href !== '/' && currentPath.startsWith(item.href) && !item.href.startsWith('#') && !item.href.startsWith('http'));
+      const itemNorm = normalizePath(item.href);
+      const isActive = !item.href.startsWith('#') && !item.href.startsWith('http') &&
+        (itemNorm === currentNorm ||
+         (itemNorm !== '/' && currentNorm.startsWith(itemNorm)));
       return `<a href="${item.href}" class="nav-link${isActive ? ' active' : ''}">${item.label}</a>`;
     }).join('');
 
@@ -56,6 +66,9 @@ class TeraHeader extends HTMLElement {
         :host {
           display: block;
           font-family: var(--font-sans, 'Inter', sans-serif);
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          text-rendering: optimizeLegibility;
         }
         header {
           position: sticky;
@@ -68,7 +81,7 @@ class TeraHeader extends HTMLElement {
         .inner {
           max-width: var(--container-max, 1152px);
           margin: 0 auto;
-          padding: 14px 24px;
+          padding: 16px 24px;
           display: flex;
           align-items: center;
           justify-content: space-between;
