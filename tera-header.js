@@ -60,6 +60,7 @@ class TeraHeader extends HTMLElement {
     }).join('');
 
     const ctaHtml = ctaText ? `<a href="${ctaHref}" class="cta">${ctaText}</a>` : '';
+    const mobileCtaHtml = ctaText ? `<a href="${ctaHref}" class="cta mobile-cta">${ctaText}</a>` : '';
 
     shadow.innerHTML = `
       <style>
@@ -171,14 +172,52 @@ class TeraHeader extends HTMLElement {
         }
         .mobile-btn {
           display: none;
+          align-items: center;
+          justify-content: center;
           background: none;
           border: none;
           cursor: pointer;
           padding: 8px;
+          color: var(--foreground, #101828);
+        }
+        .mobile-btn svg {
+          width: 24px;
+          height: 24px;
+        }
+        .mobile-btn .icon-close {
+          display: none;
+        }
+        :host(.is-open) .mobile-btn .icon-menu {
+          display: none;
+        }
+        :host(.is-open) .mobile-btn .icon-close {
+          display: block;
+        }
+        .mobile-nav {
+          display: none;
+          flex-direction: column;
+          gap: 2px;
+          padding: 8px 24px 20px;
+          border-top: 1px solid var(--card-border, #e1e9fb);
+        }
+        .mobile-nav .nav-link {
+          padding: 12px 16px;
+          border-radius: var(--radius-md, 12px);
+        }
+        .mobile-nav .nav-link::after {
+          display: none;
+        }
+        .mobile-nav .nav-link.active {
+          background: var(--muted-bg, #eef4ff);
+        }
+        .mobile-nav .mobile-cta {
+          margin: 8px 16px 0;
+          text-align: center;
         }
         @media (max-width: 768px) {
           nav { display: none; }
-          .mobile-btn { display: block; }
+          .mobile-btn { display: flex; }
+          :host(.is-open) .mobile-nav { display: flex; }
         }
       </style>
       <header>
@@ -191,6 +230,14 @@ class TeraHeader extends HTMLElement {
             ${navHtml}
             ${ctaHtml}
           </nav>
+          <button class="mobile-btn" type="button" aria-label="Buka menu" aria-expanded="false">
+            <svg class="icon-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <div class="mobile-nav">
+          ${navHtml}
+          ${mobileCtaHtml}
         </div>
       </header>
     `;
@@ -203,6 +250,24 @@ class TeraHeader extends HTMLElement {
     };
     updateScrolled();
     window.addEventListener('scroll', updateScrolled, { passive: true });
+
+    // Mobile menu: :host(.is-open) drives both the icon swap and the
+    // .mobile-nav's display via CSS above, so JS only has to flip the class.
+    const mobileBtn = shadow.querySelector('.mobile-btn');
+    const closeMobileNav = () => {
+      this.classList.remove('is-open');
+      mobileBtn.setAttribute('aria-expanded', 'false');
+    };
+    mobileBtn.addEventListener('click', () => {
+      const isOpen = this.classList.toggle('is-open');
+      mobileBtn.setAttribute('aria-expanded', String(isOpen));
+    });
+    shadow.querySelector('.mobile-nav').addEventListener('click', (e) => {
+      if (e.target.closest('a')) closeMobileNav();
+    });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) closeMobileNav();
+    });
   }
 }
 
