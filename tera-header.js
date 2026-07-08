@@ -193,7 +193,7 @@ class TeraHeader extends HTMLElement {
           color: var(--primary-foreground, #fff);
           background: var(--primary, #0d6efd);
           padding: 10px 18px;
-          border-radius: var(--radius-card, 10px);
+          border-radius: var(--radius-button, 4px);
           margin-left: 8px;
           transition: background 0.15s;
         }
@@ -232,7 +232,7 @@ class TeraHeader extends HTMLElement {
         }
         .mobile-nav .nav-link {
           padding: 12px 16px;
-          border-radius: var(--radius-card, 10px);
+          border-radius: var(--radius-button, 4px);
         }
         .mobile-nav .nav-link::after {
           display: none;
