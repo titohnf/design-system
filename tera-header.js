@@ -64,19 +64,31 @@ class TeraHeader extends HTMLElement {
     shadow.innerHTML = `
       <style>
         :host {
+          /* position:sticky lives on the host itself, not on the inner
+             <header> — some Chromium versions fail to stick a shadow-DOM
+             child when the host has display:block, so the host is made
+             the sticky element directly instead. */
           display: block;
+          position: sticky;
+          top: 0;
+          z-index: 50;
           font-family: var(--font-sans, 'Inter', sans-serif);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
           text-rendering: optimizeLegibility;
         }
         header {
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          background: rgba(255,255,255,0.95);
-          backdrop-filter: blur(6px);
-          border-bottom: 1px solid var(--card-border, #e1e9fb);
+          background: rgba(255,255,255,0.72);
+          backdrop-filter: blur(14px) saturate(1.6);
+          -webkit-backdrop-filter: blur(14px) saturate(1.6);
+          border-bottom: 1px solid transparent;
+          box-shadow: none;
+          transition: background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+        header.is-scrolled {
+          background: rgba(255,255,255,0.86);
+          border-bottom-color: var(--card-border, #e1e9fb);
+          box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
         }
         .inner {
           max-width: var(--container-max, 1152px);
@@ -107,21 +119,41 @@ class TeraHeader extends HTMLElement {
           flex-wrap: wrap;
         }
         .nav-link {
+          position: relative;
           text-decoration: none;
-          font-size: 14px;
-          font-weight: 500;
-          color: rgba(16,24,40,0.8);
+          font-size: 14.5px;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+          color: rgba(16,24,40,0.72);
           padding: 8px 16px;
           border-radius: var(--radius-pill, 9999px);
-          transition: background 0.15s, color 0.15s;
+          transition: background 0.15s ease, color 0.15s ease;
+        }
+        .nav-link::after {
+          content: "";
+          position: absolute;
+          left: 16px;
+          right: 16px;
+          bottom: 3px;
+          height: 2px;
+          border-radius: 2px;
+          background: var(--primary, #0d6efd);
+          transform: scaleX(0);
+          transform-origin: center;
+          transition: transform 0.2s ease;
         }
         .nav-link:hover {
-          background: var(--muted-bg, #eaf1ff);
           color: var(--primary-dark, #0b57d0);
         }
+        .nav-link:hover::after {
+          transform: scaleX(1);
+        }
         .nav-link.active {
-          background: var(--muted-bg, #eaf1ff);
           color: var(--primary-dark, #0b57d0);
+          font-weight: 700;
+        }
+        .nav-link.active::after {
+          transform: scaleX(1);
         }
         .cta {
           text-decoration: none;
@@ -163,6 +195,14 @@ class TeraHeader extends HTMLElement {
       </header>
     `;
 
+    // Sharpen the sticky header (stronger blur + shadow) once the page has
+    // actually scrolled, so it stays a light glass sheen at the very top.
+    const headerEl = shadow.querySelector('header');
+    const updateScrolled = () => {
+      headerEl.classList.toggle('is-scrolled', window.scrollY > 8);
+    };
+    updateScrolled();
+    window.addEventListener('scroll', updateScrolled, { passive: true });
   }
 }
 
