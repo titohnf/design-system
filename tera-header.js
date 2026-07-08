@@ -30,6 +30,28 @@
    header — itu sudah cukup di footer (kolom "Bagian dari Tera").
    ========================================================= */
 
+// React Router / Next.js navigate client-side via history.pushState, which
+// fires no browser event — patch it once (shared across every <tera-header>
+// instance) so the header can re-check which link is "active" after an SPA
+// navigation instead of only on first mount.
+let teraHistoryPatched = false;
+function patchHistoryOnce() {
+  if (teraHistoryPatched) return;
+  teraHistoryPatched = true;
+  const notify = () => window.dispatchEvent(new Event('tera:locationchange'));
+  const origPush = history.pushState;
+  const origReplace = history.replaceState;
+  history.pushState = function (...args) {
+    origPush.apply(this, args);
+    notify();
+  };
+  history.replaceState = function (...args) {
+    origReplace.apply(this, args);
+    notify();
+  };
+  window.addEventListener('popstate', notify);
+}
+
 class TeraHeader extends HTMLElement {
   connectedCallback() {
     const logoText = this.getAttribute('logo-text') || 'Tera';
@@ -39,23 +61,26 @@ class TeraHeader extends HTMLElement {
     const ctaText = this.getAttribute('cta-text') || '';
     const ctaHref = this.getAttribute('cta-href') || '#';
 
-    const currentPath = window.location.pathname;
-
     const normalizePath = (p) => {
       if (!p) return '/';
       p = p.replace(/\/index\.html$/, '/');
       if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
       return p === '' ? '/' : p;
     };
-    const currentNorm = normalizePath(currentPath);
+
+    const isActiveHref = (href, currentNorm) => {
+      const itemNorm = normalizePath(href);
+      return !href.startsWith('#') && !href.startsWith('http') &&
+        (itemNorm === currentNorm ||
+         (itemNorm !== '/' && currentNorm.startsWith(itemNorm)));
+    };
+
+    const currentNorm = normalizePath(window.location.pathname);
 
     const shadow = this.attachShadow({ mode: 'open' });
 
     const navHtml = navItems.map(item => {
-      const itemNorm = normalizePath(item.href);
-      const isActive = !item.href.startsWith('#') && !item.href.startsWith('http') &&
-        (itemNorm === currentNorm ||
-         (itemNorm !== '/' && currentNorm.startsWith(itemNorm)));
+      const isActive = isActiveHref(item.href, currentNorm);
       return `<a href="${item.href}" class="nav-link${isActive ? ' active' : ''}">${item.label}</a>`;
     }).join('');
 
@@ -265,9 +290,30 @@ class TeraHeader extends HTMLElement {
     shadow.querySelector('.mobile-nav').addEventListener('click', (e) => {
       if (e.target.closest('a')) closeMobileNav();
     });
-    window.addEventListener('resize', () => {
+    const onResize = () => {
       if (window.innerWidth > 768) closeMobileNav();
-    });
+    };
+    window.addEventListener('resize', onResize);
+
+    // Re-evaluate which link is "active" after client-side (SPA) navigation.
+    patchHistoryOnce();
+    const updateActiveLinks = () => {
+      const norm = normalizePath(window.location.pathname);
+      shadow.querySelectorAll('.nav-link').forEach((el, i) => {
+        const item = navItems[i % navItems.length];
+        el.classList.toggle('active', isActiveHref(item.href, norm));
+      });
+    };
+    window.addEventListener('tera:locationchange', updateActiveLinks);
+    this._teraCleanup = () => {
+      window.removeEventListener('tera:locationchange', updateActiveLinks);
+      window.removeEventListener('scroll', updateScrolled);
+      window.removeEventListener('resize', onResize);
+    };
+  }
+
+  disconnectedCallback() {
+    if (this._teraCleanup) this._teraCleanup();
   }
 }
 
