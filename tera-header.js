@@ -121,7 +121,7 @@ class TeraHeader extends HTMLElement {
           margin: 0 auto;
           padding: 16px 24px;
           display: flex;
-          align-items: center;
+          align-items: stretch;
           justify-content: space-between;
           gap: 16px;
         }
@@ -140,27 +140,31 @@ class TeraHeader extends HTMLElement {
         }
         nav {
           display: flex;
-          align-items: center;
+          align-items: stretch;
           gap: 4px;
           flex-wrap: wrap;
         }
         .nav-link {
           position: relative;
+          display: flex;
+          align-items: center;
           text-decoration: none;
           font-size: 14.5px;
           font-weight: 600;
           letter-spacing: 0.01em;
           color: rgba(16,24,40,0.72);
           padding: 8px 16px;
-          border-radius: var(--radius-pill, 9999px);
-          transition: background 0.15s ease, color 0.15s ease;
+          transition: color 0.15s ease;
         }
         .nav-link::after {
+          /* bottom: -16px cancels out .inner's padding-bottom, so the
+             indicator sits flush with the navbar's own bottom edge instead
+             of floating a few pixels above it under the link text. */
           content: "";
           position: absolute;
           left: 16px;
           right: 16px;
-          bottom: 3px;
+          bottom: -16px;
           height: 2px;
           border-radius: 2px;
           background: var(--primary, #0d6efd);
@@ -182,13 +186,14 @@ class TeraHeader extends HTMLElement {
           transform: scaleX(1);
         }
         .cta {
+          align-self: center;
           text-decoration: none;
           font-size: 14px;
           font-weight: 600;
           color: var(--primary-foreground, #fff);
           background: var(--primary, #0d6efd);
           padding: 10px 18px;
-          border-radius: var(--radius-pill, 9999px);
+          border-radius: var(--radius-card, 10px);
           margin-left: 8px;
           transition: background 0.15s;
         }
@@ -227,7 +232,7 @@ class TeraHeader extends HTMLElement {
         }
         .mobile-nav .nav-link {
           padding: 12px 16px;
-          border-radius: var(--radius-md, 12px);
+          border-radius: var(--radius-card, 10px);
         }
         .mobile-nav .nav-link::after {
           display: none;
