@@ -126,9 +126,15 @@ class TeraFooter extends HTMLElement {
           flex-direction: column;
           align-items: flex-start;
         }
+        .brand-top {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 10px;
+        }
         .logo-circle {
-          width: 44px;
-          height: 44px;
+          width: 32px;
+          height: 32px;
           border-radius: var(--radius-pill, 9999px);
           background: #ffffff;
           border: 1px solid var(--card-border, #e1e9fb);
@@ -136,10 +142,10 @@ class TeraFooter extends HTMLElement {
           align-items: center;
           justify-content: center;
           overflow: hidden;
-          margin-bottom: 10px;
+          flex-shrink: 0;
         }
         .logo-circle img {
-          height: 26px;
+          height: 18px;
           width: auto;
           display: block;
         }
@@ -147,7 +153,6 @@ class TeraFooter extends HTMLElement {
           font-weight: 700;
           font-size: 16px;
           color: var(--foreground, #101828);
-          margin-bottom: 10px;
         }
         .brand p {
           font-size: 13.5px;
@@ -173,8 +178,10 @@ class TeraFooter extends HTMLElement {
       <footer>
         <div class="inner">
           <div class="col brand">
-            ${logoImg ? `<div class="logo-circle"><img src="${logoImg}" alt="${logoText}"></div>` : ""}
-            <span class="brand-name">${logoText}</span>
+            <div class="brand-top">
+              ${logoImg ? `<div class="logo-circle"><img src="${logoImg}" alt="${logoText}"></div>` : ""}
+              <span class="brand-name">${logoText}</span>
+            </div>
             <p>${description}</p>
           </div>
           <div class="col">
