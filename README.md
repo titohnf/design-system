@@ -26,9 +26,22 @@ repo — bagian itu akan ditimpa otomatis, jangan edit manual di sana).
 4. Situs React (komunitastera, foundation) akan menerima Pull Request/commit
    otomatis dari GitHub Action, lalu Netlify redeploy otomatis
 
+## Komponen bersama
+
+Selain token, header dan footer semua situs juga dibagikan lewat Custom
+Element (`<tera-header>` di `tera-header.js`, `<tera-footer>` di
+`tera-footer.js`) — jadi cukup 1 tag di tiap repo, dan style/struktur
+tetap identik di semua situs karena hidup di sini, bukan diduplikasi per
+repo. Yang boleh beda per situs hanya lewat atribut: logo, deskripsi,
+dan isi kolom "Jelajahi"/"Kontak" (lihat komentar di masing-masing file
+untuk atribut lengkap).
+
 ## Catatan
 
-Perubahan STRUKTUR (misal header dapat menu baru, footer nambah kolom)
-tidak bisa otomatis — itu tetap perlu dikerjakan manual per repo lewat
-Claude Code, karena setiap repo pakai bahasa kode yang berbeda (HTML vs
-React/JSX).
+Perubahan pada isi/urutan/style kolom footer atau header sekarang cukup
+diedit di `tera-footer.js` / `tera-header.js` di sini — otomatis berlaku
+di semua situs begitu commit SHA yang dipin di tiap repo diupdate.
+Perubahan yang benar-benar STRUKTURAL di luar itu (misal footer butuh
+kolom ke-5 yang kontennya beda tipe) tetap perlu penyesuaian manual per
+repo lewat Claude Code, karena tiap repo pakai bahasa kode yang berbeda
+(HTML vs React/JSX).
