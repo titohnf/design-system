@@ -21,10 +21,14 @@
    - logo-text   : teks di sebelah logo (wajib)
    - logo-img    : path/url gambar logo (opsional)
    - logo-href   : link saat logo diklik (default: "/")
-   - nav         : JSON array {label, href} untuk menu (wajib)
-   - cta-text    : teks tombol CTA di ujung kanan (opsional, 
+   - nav         : JSON array {label, href, icon} untuk menu (wajib;
+                   icon opsional, emoji ditaruh sebelum label). Link
+                   yang diawali http(s):// otomatis kebuka di tab baru.
+   - cta-text    : teks tombol CTA di ujung kanan (opsional,
                    kalau kosong tombol tidak muncul)
    - cta-href    : link tombol CTA (wajib kalau cta-text diisi)
+   - nav-hover   : "underline" (default) atau "pill" — gaya hover menu.
+                   Opt-in per situs, tidak mengubah default situs lain.
    
    Catatan: link ke 3 web TERA Group lain sengaja TIDAK ada di 
    header — itu sudah cukup di footer (kolom "Bagian dari Tera").
@@ -60,6 +64,7 @@ class TeraHeader extends HTMLElement {
     const navItems = JSON.parse(this.getAttribute('nav') || '[]');
     const ctaText = this.getAttribute('cta-text') || '';
     const ctaHref = this.getAttribute('cta-href') || '#';
+    const navHover = this.getAttribute('nav-hover') || 'underline';
 
     const normalizePath = (p) => {
       if (!p) return '/';
@@ -77,11 +82,16 @@ class TeraHeader extends HTMLElement {
 
     const currentNorm = normalizePath(window.location.pathname);
 
+    this.classList.toggle('nav-hover-pill', navHover === 'pill');
+
     const shadow = this.attachShadow({ mode: 'open' });
 
     const navHtml = navItems.map(item => {
       const isActive = isActiveHref(item.href, currentNorm);
-      return `<a href="${item.href}" class="nav-link${isActive ? ' active' : ''}">${item.label}</a>`;
+      const isExternal = /^https?:\/\//.test(item.href);
+      const targetAttr = isExternal ? ' target="_blank" rel="noopener"' : '';
+      const iconHtml = item.icon ? `<span class="nav-icon">${item.icon}</span>` : '';
+      return `<a href="${item.href}" class="nav-link${isActive ? ' active' : ''}"${targetAttr}>${iconHtml}${item.label}</a>`;
     }).join('');
 
     const ctaHtml = ctaText ? `<a href="${ctaHref}" class="cta">${ctaText}</a>` : '';
@@ -148,6 +158,7 @@ class TeraHeader extends HTMLElement {
           position: relative;
           display: flex;
           align-items: center;
+          gap: 6px;
           text-decoration: none;
           font-size: 14.5px;
           font-weight: 600;
@@ -155,6 +166,10 @@ class TeraHeader extends HTMLElement {
           color: rgba(16,24,40,0.72);
           padding: 8px 16px;
           transition: color 0.15s ease;
+        }
+        .nav-icon {
+          font-size: 15px;
+          line-height: 1;
         }
         .nav-link::after {
           /* bottom: -16px cancels out .inner's padding-bottom, so the
@@ -184,6 +199,21 @@ class TeraHeader extends HTMLElement {
         }
         .nav-link.active::after {
           transform: scaleX(1);
+        }
+        /* opt-in via nav-hover="pill" — rounded background highlight
+           instead of the default underline indicator. */
+        :host(.nav-hover-pill) .nav-link {
+          border-radius: var(--radius-pill, 9999px);
+          transition: color 0.15s ease, background 0.15s ease;
+        }
+        :host(.nav-hover-pill) .nav-link::after {
+          display: none;
+        }
+        :host(.nav-hover-pill) .nav-link:hover {
+          background: var(--muted-bg, #eef4ff);
+        }
+        :host(.nav-hover-pill) .nav-link.active {
+          background: var(--muted-bg, #eef4ff);
         }
         .cta {
           align-self: center;
