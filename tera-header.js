@@ -170,6 +170,12 @@ class TeraHeader extends HTMLElement {
         .nav-icon {
           font-size: 15px;
           line-height: 1;
+          display: inline-flex;
+        }
+        .nav-icon svg {
+          width: 16px;
+          height: 16px;
+          display: block;
         }
         .nav-link::after {
           /* bottom: -16px cancels out .inner's padding-bottom, so the
